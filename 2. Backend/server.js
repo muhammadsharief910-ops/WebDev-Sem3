@@ -81,23 +81,63 @@ let auth = async (req, res, next) => {
   req.user = currentuser;
   next();
 };
+let isAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).send("Access denied: Admin only");
+  }
+  next();
+};
 
 //admin dashboard
-app.get("/dashboard", auth, (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.send("youre not a admin");
-  }
+app.get("/dashboard", auth, isAdmin, (req, res) => {
   return res.send("Welcome Admin");
 });
 
 // My Profile API
 
 app.get("/me", auth, (req, res) => {
+  res.json({
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
+  });
+});
+
+app.put("/me", auth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      res.send("name required");
+    }
+
+    const updateUser = await user
+      .findByIdAndUpdate(req.user._id, { name }, { new: true })
+      .select("-password");
+
+    res.json(updateUser);
+  } catch (err) {
+    res.send(err);
+  }
+});
+
+app.patch("/users/:id/role", auth, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!role || !["user" , "admin"].includes(role)) {
+      return res.send("incorrect Input");
+    }
+    const updatedRole = await user
+      .findByIdAndUpdate(id, { role }, { new: true })
+      .select("-password");
     res.json({
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role
-    })
+      messege: "role Updated",
+      user: updatedRole,
+    });
+  } catch (err) {
+    res.send(err);
+  }
 });
 
 app.listen(3000, () => {

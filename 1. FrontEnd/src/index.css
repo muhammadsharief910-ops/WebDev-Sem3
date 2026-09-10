@@ -186,6 +186,20 @@ h2 {
   border-color: #111;
 }
 
+.logout-nav-btn {
+  cursor: pointer;
+  background: #fff;
+  color: #dc2626;
+  border-color: #fecaca;
+  font-family: inherit;
+}
+
+.logout-nav-btn:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
 /* Presets Bar */
 .presets-bar {
   background: #fff;
@@ -243,6 +257,7 @@ h2 {
 .method-get { background: #dcfce7; color: #15803d; }
 .method-post { background: #dbeafe; color: #1d4ed8; }
 .method-put { background: #fef3c7; color: #b45309; }
+.method-patch { background: #ede9fe; color: #7c3aed; }
 .method-delete { background: #fee2e2; color: #b91c1c; }
 
 /* Main Tester Card */
@@ -374,6 +389,12 @@ h2 {
   cursor: pointer;
 }
 
+.token-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .sync-token-btn {
   background: none;
   border: none;
@@ -382,10 +403,26 @@ h2 {
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
+  padding: 0;
 }
 
 .sync-token-btn:hover {
   color: #4338ca;
+}
+
+.clear-token-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.clear-token-btn:hover {
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .token-textarea, .body-textarea {

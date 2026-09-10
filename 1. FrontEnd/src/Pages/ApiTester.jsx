@@ -6,7 +6,9 @@ const ApiTester = () => {
   const [method, setMethod] = useState("GET");
   const [endpoint, setEndpoint] = useState("/me");
   const [useToken, setUseToken] = useState(true);
-  const [customToken, setCustomToken] = useState(localStorage.getItem("token") || "");
+  const [customToken, setCustomToken] = useState(
+    localStorage.getItem("token") || "",
+  );
   const [requestBody, setRequestBody] = useState("{\n  \n}");
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,9 +17,40 @@ const ApiTester = () => {
 
   const presets = [
     { label: "GET /me", method: "GET", endpoint: "/me", withToken: true },
-    { label: "GET /dashboard", method: "GET", endpoint: "/dashboard", withToken: true },
-    { label: "POST /login", method: "POST", endpoint: "/login", withToken: false, body: '{\n  "email": "test@example.com",\n  "password": "password123"\n}' },
-    { label: "POST /signup", method: "POST", endpoint: "/signup", withToken: false, body: '{\n  "name": "Alex",\n  "email": "alex@example.com",\n  "password": "secret",\n  "role": "user"\n}' },
+    {
+      label: "GET /dashboard",
+      method: "GET",
+      endpoint: "/dashboard",
+      withToken: true,
+    },
+    {
+      label: "POST /login",
+      method: "POST",
+      endpoint: "/login",
+      withToken: false,
+      body: '{\n  "email": "test@example.com",\n  "password": "password123"\n}',
+    },
+    {
+      label: "POST /signup",
+      method: "POST",
+      endpoint: "/signup",
+      withToken: false,
+      body: '{\n  "name": "Alex",\n  "email": "alex@example.com",\n  "password": "secret",\n  "role": "user"\n}',
+    },
+    {
+      label: "PUT /me",
+      method: "PUT",
+      endpoint: "/me",
+      withToken: true,
+      body: '{\n  "name": "Updated Name"\n}',
+    },
+    {
+      label: "PATCH /users/:id/role",
+      method: "PATCH",
+      endpoint: "/users/6aa08ba457d690a2650113eb/role",
+      withToken: true,
+      body: '{\n  "role": "admin"\n}',
+    },
   ];
 
   const handleApplyPreset = (preset) => {
@@ -36,7 +69,9 @@ const ApiTester = () => {
     setStatus(null);
 
     const startTime = performance.now();
-    const url = endpoint.startsWith("http") ? endpoint : `http://localhost:3000${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+    const url = endpoint.startsWith("http")
+      ? endpoint
+      : `http://localhost:3000${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
     const headers = {};
     if (useToken && customToken) {
@@ -66,7 +101,10 @@ const ApiTester = () => {
 
       const elapsed = Math.round(performance.now() - startTime);
       setDuration(elapsed);
-      setStatus({ code: res.status, text: res.statusText || (res.status === 200 ? "OK" : "Error") });
+      setStatus({
+        code: res.status,
+        text: res.statusText || (res.status === 200 ? "OK" : "Error"),
+      });
       setResponse(res.data);
     } catch (err) {
       const elapsed = Math.round(performance.now() - startTime);
@@ -78,18 +116,41 @@ const ApiTester = () => {
     setLoading(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setCustomToken("");
+    setResponse({ message: "Logged out! Token cleared from localStorage." });
+    setStatus({ code: "AUTH", text: "Logged Out" });
+  };
+
   return (
     <div className="tester-wrapper">
       <div className="tester-header">
         <div className="tester-title-group">
           <span className="tester-badge">API Playground</span>
           <h1>Backend Endpoint Tester</h1>
-          <p>Quickly send requests to your Express server, inspect tokens, and view responses.</p>
+          <p>
+            Quickly send requests to your Express server, inspect tokens, and
+            view responses.
+          </p>
         </div>
         <div className="tester-nav">
-          <Link to="/" className="nav-link">Signup</Link>
-          <Link to="/login" className="nav-link">Login</Link>
-          <Link to="/dashboard" className="nav-link">Dashboard</Link>
+          <Link to="/" className="nav-link">
+            Signup
+          </Link>
+          <Link to="/login" className="nav-link">
+            Login
+          </Link>
+          <Link to="/dashboard" className="nav-link">
+            Dashboard
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="nav-link logout-nav-btn"
+          >
+            🚪 Logout
+          </button>
         </div>
       </div>
 
@@ -104,7 +165,9 @@ const ApiTester = () => {
               className="preset-btn"
               onClick={() => handleApplyPreset(p)}
             >
-              <span className={`method-tag method-${p.method.toLowerCase()}`}>{p.method}</span>
+              <span className={`method-tag method-${p.method.toLowerCase()}`}>
+                {p.method}
+              </span>
               {p.endpoint}
             </button>
           ))}
@@ -123,6 +186,7 @@ const ApiTester = () => {
               <option value="GET">GET</option>
               <option value="POST">POST</option>
               <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
               <option value="DELETE">DELETE</option>
             </select>
 
@@ -153,13 +217,24 @@ const ApiTester = () => {
                 />
                 <span>Include Authorization Header (token)</span>
               </label>
-              <button
-                type="button"
-                className="sync-token-btn"
-                onClick={() => setCustomToken(localStorage.getItem("token") || "")}
-              >
-                Reload token from localStorage
-              </button>
+              <div className="token-actions">
+                <button
+                  type="button"
+                  className="sync-token-btn"
+                  onClick={() =>
+                    setCustomToken(localStorage.getItem("token") || "")
+                  }
+                >
+                  ↻ Reload token
+                </button>
+                <button
+                  type="button"
+                  className="clear-token-btn"
+                  onClick={handleLogout}
+                >
+                  ✕ Clear Token
+                </button>
+              </div>
             </div>
 
             {useToken && (
@@ -193,7 +268,9 @@ const ApiTester = () => {
             <h3>Response</h3>
             {status && (
               <div className="status-group">
-                <span className={`status-pill ${status.code >= 200 && status.code < 300 ? "status-success" : "status-error"}`}>
+                <span
+                  className={`status-pill ${status.code >= 200 && status.code < 300 ? "status-success" : "status-error"}`}
+                >
                   Status: {status.code} {status.text}
                 </span>
                 {duration !== null && (
@@ -205,7 +282,9 @@ const ApiTester = () => {
 
           <div className="response-content">
             {loading ? (
-              <div className="placeholder-msg loading-msg">Sending request to backend...</div>
+              <div className="placeholder-msg loading-msg">
+                Sending request to backend...
+              </div>
             ) : response !== null ? (
               <pre className="json-output">
                 {typeof response === "object"
@@ -214,7 +293,8 @@ const ApiTester = () => {
               </pre>
             ) : (
               <div className="placeholder-msg">
-                Click "Send Request" or select a preset to see the output from your server.
+                Click "Send Request" or select a preset to see the output from
+                your server.
               </div>
             )}
           </div>
