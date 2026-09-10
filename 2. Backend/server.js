@@ -111,7 +111,7 @@ app.put("/me", auth, async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) {
-      res.send("name required");
+      return res.status(400).send("name required");
     }
 
     const updateUser = await user
@@ -120,7 +120,7 @@ app.put("/me", auth, async (req, res) => {
 
     res.json(updateUser);
   } catch (err) {
-    res.send(err);
+    res.status(500).send("Server error");
   }
 });
 
