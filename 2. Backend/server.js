@@ -68,18 +68,22 @@ let auth = async (req, res, next) => {
   let token = req.headers.authorization;
 
   if (!token) {
-    return res.send("token not found");
+    return res.status(401).send("token not found");
   }
 
-  let decoded = jwt.verify(token, "secretKey123");
-  let currentuser = await user.findById(decoded.userId);
+  try {
+    let decoded = jwt.verify(token, "secretKey123");
+    let currentuser = await user.findById(decoded.userId);
 
-  if (!currentuser) {
-    return res.send("user not found");
+    if (!currentuser) {
+      return res.status(404).send("user not found");
+    }
+
+    req.user = currentuser;
+    next();
+  } catch (err) {
+    return res.status(403).send("invalid or expired token");
   }
-
-  req.user = currentuser;
-  next();
 };
 let isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
