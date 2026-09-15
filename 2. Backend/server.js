@@ -4,13 +4,17 @@ const bcryptjs = require("bcryptjs");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 
-const user = require("./db");
+const { user, order } = require("./db");
 
 const app = express();
 
 // middleware
 app.use(express.json());
 app.use(cors());
+
+// routes
+const forgotPassRouter = require("./routes/forgot-pass");
+app.use("/api", forgotPassRouter);
 
 //mongoose connection
 mongoose.connect("mongodb://127.0.0.1:27017/databse").then(() => {
@@ -68,18 +72,22 @@ let auth = async (req, res, next) => {
   let token = req.headers.authorization;
 
   if (!token) {
-    return res.send("token not found");
+    return res.status(401).send("token not found");
   }
 
-  let decoded = jwt.verify(token, "secretKey123");
-  let currentuser = await user.findById(decoded.userId);
+  try {
+    let decoded = jwt.verify(token, "secretKey123");
+    let currentuser = await user.findById(decoded.userId);
 
-  if (!currentuser) {
-    return res.send("user not found");
+    if (!currentuser) {
+      return res.status(404).send("user not found");
+    }
+
+    req.user = currentuser;
+    next();
+  } catch (err) {
+    return res.status(403).send("invalid or expired token");
   }
-
-  req.user = currentuser;
-  next();
 };
 let isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
@@ -103,11 +111,17 @@ app.get("/me", auth, (req, res) => {
   });
 });
 
+
+//update own profile
 app.put("/me", auth, async (req, res) => {
   try {
+    const {role , email, password} = req.body;
+    if(role!== undefined || email!== undefined || password!== undefined) {
+      return res.send("access denied");
+    }
     const { name } = req.body;
     if (!name) {
-      res.send("name required");
+      return res.status(400).send("name required");
     }
 
     const updateUser = await user
@@ -116,10 +130,12 @@ app.put("/me", auth, async (req, res) => {
 
     res.json(updateUser);
   } catch (err) {
-    res.send(err);
+    res.status(500).send("Server error");
   }
 });
 
+
+//
 app.patch("/users/:id/role", auth, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -139,6 +155,37 @@ app.patch("/users/:id/role", auth, isAdmin, async (req, res) => {
     res.send(err);
   }
 });
+
+// order create
+app.post("/order" , auth , async (req , res) => {
+  try {
+    const {productName , amount} = req.body;
+
+    const newOrder  = new order({
+      productName, 
+      amount , 
+      userId: req.user._id,
+    })
+    await newOrder.save();
+    return res.json({messege:"order places!", order:newOrder}) 
+
+  }catch(err) {
+    console.log(err);
+  }
+})
+
+//get my orders
+
+app.get("/my-orders" , auth , async (req , res)=> {
+  try {
+    const myOrders = await order.find({ userId: req.user._id });
+
+    return res.json(myOrders);
+
+  }catch(err) {
+    console.log(err);
+  }
+})
 
 app.listen(3000, () => {
   console.log("server is running");
