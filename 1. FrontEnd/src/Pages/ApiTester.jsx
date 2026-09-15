@@ -51,6 +51,19 @@ const ApiTester = () => {
       withToken: true,
       body: '{\n  "role": "admin"\n}',
     },
+    {
+      label: "POST /order",
+      method: "POST",
+      endpoint: "/order",
+      withToken: true,
+      body: '{\n  "productName": "Laptop",\n  "amount": 999\n}',
+    },
+    {
+      label: "GET /my-orders",
+      method: "GET",
+      endpoint: "/my-orders",
+      withToken: true,
+    },
   ];
 
   const handleApplyPreset = (preset) => {
